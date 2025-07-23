@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { fetchClients, Client } from '@/lib/supabase'
 import ClientsTable from '@/components/ClientsTable'
-import ClientsChart from '@/components/ClientsChats'
+import ClientsCardChart from '@/components/ClientsChats'
 import StatsCards from '@/components/StatsCards'
 import { FaSpinner } from 'react-icons/fa'
 
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="lg:col-span-2">
-            <ClientsChart clients={clients} />
+            <ClientsCardChart clients={clients} />
           </div>
         </div>
 
