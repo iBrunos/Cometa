@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { fetchClients, Client } from '@/lib/supabase'
 import ClientsTable from '@/components/ClientsTable'
-import ClientsCardChart from '@/components/ClientsChats'
+import ClientsCardChart from '@/components/ClientsChart'
 import StatsCards from '@/components/StatsCards'
 import { FaSpinner } from 'react-icons/fa'
 
