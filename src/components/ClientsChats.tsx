@@ -23,7 +23,7 @@ interface ClientsChartProps {
 export default function ClientsChart({ clients }: ClientsChartProps) {
   // Agrupa clientes por domínio de e-mail
   const domainData = clients.reduce((acc, client) => {
-    const domain = client.E_mail?.split('@')[1] || 'Sem e-mail'
+    const domain = client.Email?.split('@')[1] || 'Sem e-mail'
     acc[domain] = (acc[domain] || 0) + 1
     return acc
   }, {} as Record<string, number>)

@@ -8,7 +8,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 export interface Client {
   id: string
   Nome: string
-  E_mail: string
+  Email: string
   Telefone: string
   created_at: string
 }

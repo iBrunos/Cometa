@@ -7,7 +7,7 @@ interface StatsCardsProps {
 
 export default function StatsCards({ clients }: StatsCardsProps) {
   const totalClients = clients.length
-  const withEmail = clients.filter(c => c.E_mail).length
+  const withEmail = clients.filter(c => c.Email).length
   const withPhone = clients.filter(c => c.Telefone).length
 
   const stats = [
