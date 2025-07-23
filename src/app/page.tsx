@@ -63,14 +63,6 @@ export default function DashboardPage() {
 
         {/* Cards de Estatísticas */}
         <StatsCards clients={clients} />
-
-        {/* Gráficos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="lg:col-span-2">
-            <ClientsChart clients={clients} />
-          </div>
-        </div>
-
         {/* Tabela de Clientes */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -90,6 +82,14 @@ export default function DashboardPage() {
           </div>
           <ClientsTable clients={clients} loading={loading} />
         </div>
+        {/* Gráficos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="lg:col-span-2">
+            <ClientsChart clients={clients} />
+          </div>
+        </div>
+
+
       </div>
     </div>
   )
