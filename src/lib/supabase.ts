@@ -11,6 +11,8 @@ export interface Client {
   Email: string
   Telefone: string
   created_at: string
+  nascimento: string
+  cpf: string
 }
 
 export const fetchClients = async (): Promise<{ data: Client[] | null, error: any }> => {

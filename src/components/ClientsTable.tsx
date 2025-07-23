@@ -27,6 +27,7 @@ export default function ClientsTable({
   const [searchEmail, setSearchEmail] = useState('')
   const [searchDDD, setSearchDDD] = useState('')
   const [startDate, setStartDate] = useState('')
+  const [searchCPF, setSearchCPF] = useState('')
   const [endDate, setEndDate] = useState('')
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -37,25 +38,23 @@ export default function ClientsTable({
       const emailMatch = client.Email?.toLowerCase().includes(searchEmail.toLowerCase())
       const ddd = client.Telefone?.match(/\((\d{2,3})\)/)?.[1] || ''
       const dddMatch = ddd.includes(searchDDD)
+      const cpfMatch = client.cpf?.replace(/\D/g, '').includes(searchCPF.replace(/\D/g, ''))
 
-      const createdAt = new Date(client.created_at)
-      const afterStart = startDate ? createdAt >= new Date(startDate) : true
-      const beforeEnd = endDate ? createdAt <= new Date(endDate) : true
-
-      return nomeMatch && emailMatch && dddMatch && afterStart && beforeEnd
+      return nomeMatch && emailMatch && dddMatch && cpfMatch
     })
-  }, [clients, searchNome, searchEmail, searchDDD, startDate, endDate])
-
+  }, [clients, searchNome, searchEmail, searchDDD, searchCPF])
 
   const exportToPDF = () => {
     const doc = new jsPDF()
     doc.text('Relatório de Clientes', 14, 16)
 
-    const headers = [['Nome', 'E-mail', 'Telefone', 'Data Cadastro']]
+    const headers = [['Nome', 'E-mail', 'Telefone', 'Nascimento', 'CPF', 'Data Cadastro']]
     const data = filteredClients.map(client => [
       client.Nome,
       client.Email || '-',
       client.Telefone || '-',
+      client.nascimento || '-',
+      client.cpf || '-',
       new Date(client.created_at).toLocaleDateString('pt-BR'),
     ])
 
@@ -69,6 +68,10 @@ export default function ClientsTable({
 
     doc.save(`clientes_${new Date().toISOString().slice(0, 10)}.pdf`)
   }
+  function formatCPF(cpf: string): string {
+    const cleaned = cpf.replace(/\D/g, '')
+    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+  }
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
@@ -76,6 +79,8 @@ export default function ClientsTable({
         Nome: client.Nome,
         Email: client.Email || '-',
         Telefone: client.Telefone || '-',
+        Nascimento: client.nascimento || '-',
+        CPF: client.cpf || '-',
         'Data Cadastro': new Date(client.created_at).toLocaleDateString('pt-BR'),
       }))
     )
@@ -84,6 +89,7 @@ export default function ClientsTable({
     XLSX.writeFile(workbook, `clientes_${new Date().toISOString().slice(0, 10)}.xlsx`)
   }
 
+
   const exportToCSV = () => {
     const csvContent = [
       ['Nome', 'E-mail', 'Telefone', 'Data Cadastro'],
@@ -91,6 +97,8 @@ export default function ClientsTable({
         client.Nome,
         client.Email || '-',
         client.Telefone || '-',
+        client.nascimento || '-',
+        client.cpf || '-',
         new Date(client.created_at).toLocaleDateString('pt-BR'),
       ]),
     ]
@@ -110,7 +118,7 @@ export default function ClientsTable({
   return (
     <div className="overflow-x-auto relative bg-white p-4 rounded-lg shadow border border-gray-200">
       {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <input
           type="text"
           placeholder="Filtrar por nome"
@@ -133,18 +141,11 @@ export default function ClientsTable({
           className="border border-gray-300 rounded px-3 py-2 w-full"
         />
         <input
-          type="date"
-          value={startDate}
-          onChange={e => setStartDate(e.target.value)}
+          type="text"
+          placeholder="Filtrar por CPF"
+          value={searchCPF}
+          onChange={e => setSearchCPF(e.target.value)}
           className="border border-gray-300 rounded px-3 py-2 w-full"
-          placeholder="Data inicial"
-        />
-        <input
-          type="date"
-          value={endDate}
-          onChange={e => setEndDate(e.target.value)}
-          className="border border-gray-300 rounded px-3 py-2 w-full"
-          placeholder="Data final"
         />
       </div>
 
@@ -209,6 +210,8 @@ export default function ClientsTable({
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">E-mail</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nascimento</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPF</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Cadastro</th>
           </tr>
         </thead>
@@ -218,12 +221,15 @@ export default function ClientsTable({
               <td className="px-6 py-4 text-sm font-medium text-gray-900">{client.Nome}</td>
               <td className="px-6 py-4 text-sm text-gray-500">{client.Email || '-'}</td>
               <td className="px-6 py-4 text-sm text-gray-500">{client.Telefone || '-'}</td>
+              <td className="px-6 py-4 text-sm text-gray-500">{client.nascimento || '-'}</td>
+              <td className="px-6 py-4 text-sm text-gray-500">{client.cpf ? formatCPF(client.cpf) : '-'}</td>
               <td className="px-6 py-4 text-sm text-gray-500">
                 {new Date(client.created_at).toLocaleDateString('pt-BR')}
               </td>
             </tr>
           ))}
         </tbody>
+
       </table>
 
       {/* Paginação */}
