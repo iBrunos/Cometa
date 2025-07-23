@@ -7,6 +7,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 import { GoTriangleDown } from 'react-icons/go'
+import { TbFileExport } from "react-icons/tb";
 
 interface ClientsTableProps {
   clients: Client[]
@@ -29,20 +30,34 @@ export default function ClientsTable({
   const [startDate, setStartDate] = useState('')
   const [searchCPF, setSearchCPF] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('Todos')
+  const TIME_FILTERS = ['Todos', 'Últimos 7 dias', 'Últimos 30 dias']
+
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const filteredClients = useMemo(() => {
-    return clients.filter((client) => {
+    const now = new Date()
+
+    return clients.filter(client => {
       const nomeMatch = client.Nome?.toLowerCase().includes(searchNome.toLowerCase())
       const emailMatch = client.Email?.toLowerCase().includes(searchEmail.toLowerCase())
       const ddd = client.Telefone?.match(/\((\d{2,3})\)/)?.[1] || ''
       const dddMatch = ddd.includes(searchDDD)
       const cpfMatch = client.cpf?.replace(/\D/g, '').includes(searchCPF.replace(/\D/g, ''))
 
-      return nomeMatch && emailMatch && dddMatch && cpfMatch
+      const createdDate = new Date(client.created_at)
+      const diffDays = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
+
+      const timeMatch =
+        selectedTime === 'Todos' ||
+        (selectedTime === 'Últimos 7 dias' && diffDays <= 7) ||
+        (selectedTime === 'Últimos 30 dias' && diffDays <= 30)
+
+      return nomeMatch && emailMatch && dddMatch && cpfMatch && timeMatch
     })
-  }, [clients, searchNome, searchEmail, searchDDD, searchCPF])
+  }, [clients, searchNome, searchEmail, searchDDD, searchCPF, selectedTime])
+
 
   const exportToPDF = () => {
     const doc = new jsPDF()
@@ -89,7 +104,6 @@ export default function ClientsTable({
     XLSX.writeFile(workbook, `clientes_${new Date().toISOString().slice(0, 10)}.xlsx`)
   }
 
-
   const exportToCSV = () => {
     const csvContent = [
       ['Nome', 'E-mail', 'Telefone', 'Data Cadastro'],
@@ -119,6 +133,20 @@ export default function ClientsTable({
     <div className="overflow-x-auto relative bg-white p-4 rounded-lg shadow border border-gray-200">
       {/* Filtros */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="flex gap-2 flex-wrap col-span-full">
+          {TIME_FILTERS.map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setSelectedTime(filter)}
+              className={`text-gray-800 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-2xl text-sm px-4 py-2 flex items-center gap-1
+        ${selectedTime === filter ? 'ring-2 ring-blue-300 bg-gray-200' : ''}
+      `}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+
         <input
           type="text"
           placeholder="Filtrar por nome"
@@ -155,7 +183,7 @@ export default function ClientsTable({
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded inline-flex items-center"
         >
-          Exportar <GoTriangleDown className="ml-2" />
+          <TbFileExport /> <GoTriangleDown className="ml-2" title='Exportar'/>
         </button>
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-10">
@@ -229,7 +257,6 @@ export default function ClientsTable({
             </tr>
           ))}
         </tbody>
-
       </table>
 
       {/* Paginação */}

@@ -12,18 +12,31 @@ interface ClientsChartProps {
 }
 
 const COLORS = ['#6366F1', '#22D3EE', '#FCD34D', '#FB7185', '#10B981', '#A78BFA']
+const TIME_FILTERS = ['Todos', 'Últimos 7 dias', 'Últimos 30 dias']
 
 export default function ClientsCardChart({ clients }: ClientsChartProps) {
   const [selectedDomain, setSelectedDomain] = useState('Todos')
+  const [selectedTime, setSelectedTime] = useState('Todos')
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
+  const now = new Date()
+  const filteredByTime = clients.filter(client => {
+    if (selectedTime === 'Todos') return true
+    const created = new Date(client.created_at)
+    const diffDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
+    if (selectedTime === 'Últimos 7 dias') return diffDays <= 7
+    if (selectedTime === 'Últimos 30 dias') return diffDays <= 30
+    return true
+  })
+
   const allDomains = Array.from(
-    new Set(clients.map(c => c.Email?.split('@')[1] || 'Sem e-mail'))
+    new Set(filteredByTime.map(c => c.Email?.split('@')[1] || 'Sem e-mail'))
   )
 
-  const filteredClients = selectedDomain === 'Todos'
-    ? clients
-    : clients.filter(c => c.Email?.includes(selectedDomain))
+  const filteredClients =
+    selectedDomain === 'Todos'
+      ? filteredByTime
+      : filteredByTime.filter(c => c.Email?.includes(selectedDomain))
 
   const domainData = filteredClients.reduce((acc, client) => {
     const domain = client.Email?.split('@')[1] || 'Sem e-mail'
@@ -38,47 +51,68 @@ export default function ClientsCardChart({ clients }: ClientsChartProps) {
 
   return (
     <div className="p-6 bg-white text-gray-900 rounded-2xl shadow-lg w-full relative border border-gray-200">
-      {/* Filtro por domínio */}
-      <div className="absolute top-4 right-4">
-        <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="text-gray-800 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-2xl text-sm px-4 py-2 flex items-center gap-1"
-        >
-          <IoIosSettings className="w-5 h-5" />
-          <GoTriangleDown />
-        </button>
-        {dropdownOpen && (
-          <div className="absolute right-0 mt-2 z-10 bg-white border border-gray-200 rounded-2xl shadow-md w-44">
-            <ul className="py-2 text-sm text-gray-800">
-              <li>
-                <button
-                  onClick={() => {
-                    setSelectedDomain('Todos')
-                    setDropdownOpen(false)
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between"
-                >
-                  Todos
-                  {selectedDomain === 'Todos' && <FaCheck className="text-green-500 ml-2" />}
-                </button>
-              </li>
-              {allDomains.map((domain, index) => (
-                <li key={index}>
+      {/* Filtros */}
+      <div className="flex justify-between items-start mb-4 flex-wrap gap-2">
+        {/* Filtro de período */}
+        <div className="flex gap-2 flex-wrap">
+          {TIME_FILTERS.map((option) => (
+            <button
+              key={option}
+              onClick={() => setSelectedTime(option)}
+              className={`text-gray-800 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-2xl text-sm px-4 py-2 flex items-center gap-1
+              ${selectedTime === option ? 'ring-2 ring-blue-300 bg-gray-200' : ''}`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+
+        {/* Filtro por domínio */}
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="text-gray-800 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-2xl text-sm px-4 py-2 flex items-center gap-1"
+          >
+            <IoIosSettings className="w-5 h-5" />
+            <GoTriangleDown />
+          </button>
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 z-10 bg-white border border-gray-200 rounded-2xl shadow-md w-44">
+              <ul className="py-2 text-sm text-gray-800">
+                <li>
                   <button
                     onClick={() => {
-                      setSelectedDomain(domain)
+                      setSelectedDomain('Todos')
                       setDropdownOpen(false)
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between"
                   >
-                    {domain}
-                    {selectedDomain === domain && <FaCheck className="text-green-500 ml-2" />}
+                    Todos
+                    {selectedDomain === 'Todos' && (
+                      <FaCheck className="text-green-500 ml-2" />
+                    )}
                   </button>
                 </li>
-              ))}
-            </ul>
-          </div>
-        )}
+                {allDomains.map((domain, index) => (
+                  <li key={index}>
+                    <button
+                      onClick={() => {
+                        setSelectedDomain(domain)
+                        setDropdownOpen(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between"
+                    >
+                      {domain}
+                      {selectedDomain === domain && (
+                        <FaCheck className="text-green-500 ml-2" />
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Título e total */}
@@ -106,7 +140,10 @@ export default function ClientsCardChart({ clients }: ClientsChartProps) {
                 label
               >
                 {chartData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip />
@@ -123,7 +160,9 @@ export default function ClientsCardChart({ clients }: ClientsChartProps) {
                 className="w-4 h-4 rounded-full mr-2"
                 style={{ backgroundColor: COLORS[index % COLORS.length] }}
               ></div>
-              <span>{entry.name} ({entry.value})</span>
+              <span>
+                {entry.name} ({entry.value})
+              </span>
             </div>
           ))}
         </div>

@@ -7,6 +7,8 @@ import ClientsTable from '@/components/ClientsTable'
 import ClientsCardChart from '@/components/ClientsChart'
 import StatsCards from '@/components/StatsCards'
 import { FaSpinner } from 'react-icons/fa'
+import { GrUpdate } from "react-icons/gr";
+
 
 export default function DashboardPage() {
   const [clients, setClients] = useState<Client[]>([])
@@ -76,9 +78,9 @@ export default function DashboardPage() {
             <button
               onClick={loadData}
               disabled={loading}
-              className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded inline-flex items-center"
             >
-              {loading ? 'Atualizando...' : 'Atualizar Agora'}
+              <GrUpdate title='Atualizar'/>
             </button>
           </div>
           <ClientsTable clients={clients} loading={loading} />
