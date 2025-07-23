@@ -1,5 +1,6 @@
 'use client'
 
+
 import { useEffect, useState } from 'react'
 import { fetchClients, Client } from '@/lib/supabase'
 import ClientsTable from '@/components/ClientsTable'
