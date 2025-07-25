@@ -338,8 +338,6 @@
       © 2025 Lojas Cometa. Todos os direitos reservados.
     </footer>
   </div>
-
-  <!-- Modal de Termos -->
   <div id="termsModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeTerms()">&times;</span>
@@ -366,8 +364,6 @@
     const form = document.getElementById('wifiForm');
     const statusMessage = document.getElementById('statusMessage');
     const loading = document.getElementById('loading');
-
-    // Configurações do Supabase
     const SUPABASE_URL = 'https://zqfzwsurjbmmxfjzfpkf.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxZnp3c3VyamJtbXhmanpmcGtmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyMjk0NTEsImV4cCI6MjA2ODgwNTQ1MX0.B7ucpap68gjAWifaQFG4QY-SJ4ZfXKlJLCz9nNpW5No';
 
@@ -379,7 +375,6 @@
       }, 5000);
     }
 
-    // Função para enviar dados ao Supabase (atualizada)
     async function sendToSupabase(data) {
       try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/Clientes`, {
@@ -388,7 +383,7 @@
             'Content-Type': 'application/json',
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal' // Solicita resposta mínima
+            'Prefer': 'return=minimal'
           },
           body: JSON.stringify({
             "Nome": data.nome,
@@ -396,17 +391,13 @@
             "Telefone": data.telefone || null,
             "nascimento": data.nascimento,
             "cpf": data.cpf
-
-            // Removido created_at pois o Supabase preenche automaticamente
           })
         });
 
-        // Verifica apenas o status da resposta
-        if (response.status === 201) { // 201 Created
+        if (response.status === 201) {
           return { success: true };
         }
 
-        // Se não for 201, tenta obter detalhes do erro
         let errorData;
         try {
           errorData = await response.json();
@@ -422,7 +413,6 @@
       }
     }
 
-    // Função principal para enviar o formulário (atualizada)
     async function submitForm(val) {
       const username = document.getElementById('username').value.trim();
       const email = document.getElementById('email').value.trim();
@@ -430,8 +420,6 @@
       const birthdate = document.getElementById('birthdate').value.trim();
       const cpf = document.getElementById('cpf').value.trim();
 
-
-      // Validação básica
       if (!username || !email) {
         showMessage('Por favor, preencha todos os campos obrigatórios.', 'error');
         return;
@@ -449,7 +437,6 @@
       loading.style.display = 'block';
 
       try {
-        // Preparar dados para o Supabase
         const supabaseData = {
           nome: username,
           email: email,
@@ -457,12 +444,9 @@
           nascimento: birthdate,
           cpf: cpf
         };
-
-        // Enviar para o Supabase e aguardar confirmação
         const result = await sendToSupabase(supabaseData);
 
         if (result.success) {
-          // Só envia para o FortiGate se o Supabase tiver sucesso
           document.getElementById("answerField").value = val;
           form.submit();
         } else {
@@ -476,14 +460,12 @@
       }
     }
 
-    // Formatação do telefone
     document.getElementById('phone').addEventListener('input', function () {
       let v = this.value.replace(/\D/g, '').slice(0, 11);
       if (v.length >= 2) v = v.replace(/^(\d{2})(\d)/g, '($1) $2');
       if (v.length >= 10) v = v.replace(/(\d{5})(\d)/, '$1-$2');
       this.value = v;
     });
-    // Formatação do cpf
     document.getElementById('cpf').addEventListener('input', function () {
       let v = this.value.replace(/\D/g, '').slice(0, 11);
       if (v.length >= 3) v = v.replace(/^(\d{3})(\d)/, '$1.$2');
@@ -508,5 +490,4 @@
     }
   </script>
 </body>
-
 </html>
