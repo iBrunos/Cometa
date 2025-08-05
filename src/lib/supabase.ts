@@ -40,12 +40,23 @@ export const getCurrentUser = async () => {
   return user
 }
 
-// Função original para buscar clientes
-export const fetchClients = async () => {
-  const { data, error } = await supabase
-    .from('Clientes')
-    .select('*')
-    .order('created_at', { ascending: false })
+export const fetchClients = async (page: number, pageSize = 10) => {
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
 
-  return { data, error }
+  const { data, error, count } = await supabase
+    .from('Clientes')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to)
+
+  const totalPages = count ? Math.ceil(count / pageSize) : 1
+
+  return { data, error, totalPages }
+}
+
+
+export const deleteClient = async (id: string) => {
+  const { error } = await supabase.from('Clientes').delete().eq('id', id)
+  return { error }
 }

@@ -1,10 +1,10 @@
 'use client'
 
+import { IoMdExit } from 'react-icons/io'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { fetchClients, logout, getCurrentUser } from '@/lib/supabase'
 import { Client } from '@/lib/supabase'
-import ClientsTable from '@/components/ClientsTable'
 import ClientsChart from '@/components/ClientsChart'
 import StatsCards from '@/components/StatsCards'
 import { FaSpinner } from 'react-icons/fa'
@@ -15,28 +15,29 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndLoad = async () => {
       const user = await getCurrentUser()
       if (!user) {
         router.push('/login')
         return
       }
-      loadData()
+
+      try {
+        const { data, error } = await fetchClients(1, 1000) // busca até 1000 clientes
+        if (error) {
+          console.error('Erro ao buscar clientes:', error)
+        } else {
+          setClients(data || [])
+        }
+      } catch (err) {
+        console.error('Erro inesperado:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    checkAuth()
+    checkAuthAndLoad()
   }, [router])
-
-  const loadData = async () => {
-    try {
-      const { data } = await fetchClients()
-      if (data) setClients(data)
-    } catch (error) {
-      console.error('Erro ao carregar clientes:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleLogout = async () => {
     await logout()
@@ -59,8 +60,9 @@ export default function DashboardPage() {
         <button
           onClick={handleLogout}
           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+          title="Sair"
         >
-          Sair
+          <IoMdExit className="text-xl" />
         </button>
       </header>
 
@@ -71,12 +73,6 @@ export default function DashboardPage() {
       <div className="bg-white rounded-lg shadow p-6 mt-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Gráfico de Clientes</h2>
         <ClientsChart clients={clients} />
-      </div>
-
-      {/* Tabela de clientes */}
-      <div className="bg-white rounded-lg shadow p-6 mt-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de Clientes</h2>
-        <ClientsTable clients={clients} />
       </div>
     </div>
   )

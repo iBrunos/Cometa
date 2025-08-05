@@ -1,3 +1,6 @@
+// components/ClientStatsCards.tsx
+'use client'
+
 import { useState } from 'react'
 import { FaUsers, FaEnvelope, FaPhone } from 'react-icons/fa'
 import { Client } from '@/lib/supabase'
@@ -10,11 +13,10 @@ interface StatsCardsProps {
 const filters = [
   { label: 'Todos', value: 0 },
   { label: 'Últimos 7 dias', value: 7 },
-  { label: 'Últimos 30', value: 30 },
-  
+  { label: 'Últimos 30 dias', value: 30 },
 ]
 
-export default function StatsCards({ clients }: StatsCardsProps) {
+export default function ClientStatsCards({ clients }: StatsCardsProps) {
   const [days, setDays] = useState(0)
 
   const filteredClients = clients.filter((client) => {
@@ -24,9 +26,20 @@ export default function StatsCards({ clients }: StatsCardsProps) {
     return isAfter(createdDate, fromDate)
   })
 
+  const prevClients = clients.filter((client) => {
+    if (days === 0) return false
+    const createdDate = new Date(client.created_at)
+    const fromDate = addDays(new Date(), -(days * 2))
+    const toDate = addDays(new Date(), -days)
+    return isAfter(createdDate, fromDate) && !isAfter(createdDate, toDate)
+  })
+
   const totalClients = filteredClients.length
   const withEmail = filteredClients.filter(c => c.Email).length
   const withPhone = filteredClients.filter(c => c.Telefone).length
+
+  const change = totalClients - prevClients.length
+  const trend = change > 0 ? '↑' : change < 0 ? '↓' : '→'
 
   const stats = [
     {
@@ -55,9 +68,7 @@ export default function StatsCards({ clients }: StatsCardsProps) {
           <button
             key={filter.value}
             onClick={() => setDays(filter.value)}
-            className={`text-gray-800 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-2xl text-sm px-4 py-2 flex items-center gap-1
-              ${days === filter.value ? 'ring-2 ring-blue-300 bg-gray-200' : ''}
-            `}
+            className={`text-gray-800 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-2xl text-sm px-4 py-2 flex items-center gap-1 ${days === filter.value ? 'ring-2 ring-blue-400 bg-blue-100' : ''}`}
           >
             {filter.label}
           </button>
@@ -87,12 +98,11 @@ export default function StatsCards({ clients }: StatsCardsProps) {
               </div>
             </div>
             {stat.percentage !== undefined && (
-              <div className="bg-gray-50 px-5 py-3">
-                <div className="text-sm">
-                  <span className="font-medium text-green-600">
-                    {stat.percentage}%
-                  </span>
-                </div>
+              <div className="bg-gray-50 px-5 py-3 flex justify-between items-center">
+                <span className="text-sm text-gray-600">
+                  {stat.percentage}% dos clientes
+                </span>
+                <span className={`text-sm ${change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-gray-500'}`}>{trend} {Math.abs(change)} desde o período anterior</span>
               </div>
             )}
           </div>

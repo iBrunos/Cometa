@@ -2,12 +2,16 @@
 
 import { useState, useMemo } from 'react'
 import { Client } from '@/lib/supabase'
-import { FaSpinner, FaFilePdf, FaFileExcel, FaFileCsv } from 'react-icons/fa'
+import { FaSpinner, FaFilePdf, FaFileExcel, FaFileCsv, FaTrash } from 'react-icons/fa'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 import { GoTriangleDown } from 'react-icons/go'
-import { TbFileExport } from "react-icons/tb";
+import { TbFileExport } from "react-icons/tb"
+import { deleteClient } from '@/lib/supabase'
+import { toast, Toaster } from 'react-hot-toast'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ConfirmationDialog } from './ConfirmationDialog'
 
 interface ClientsTableProps {
   clients: Client[]
@@ -18,7 +22,7 @@ interface ClientsTableProps {
 }
 
 export default function ClientsTable({
-  clients,
+  clients: initialClients,
   loading = false,
   currentPage = 1,
   totalPages = 1,
@@ -27,13 +31,39 @@ export default function ClientsTable({
   const [searchNome, setSearchNome] = useState('')
   const [searchEmail, setSearchEmail] = useState('')
   const [searchDDD, setSearchDDD] = useState('')
-  const [startDate, setStartDate] = useState('')
   const [searchCPF, setSearchCPF] = useState('')
-  const [endDate, setEndDate] = useState('')
   const [selectedTime, setSelectedTime] = useState('Todos')
   const TIME_FILTERS = ['Todos', 'Últimos 7 dias', 'Últimos 30 dias']
-
+  const [clients, setClients] = useState<Client[]>(initialClients)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  const handleDeleteClick = (client: Client) => {
+    setSelectedClient(client)
+    setShowConfirm(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!selectedClient) return
+
+    try {
+      const { error } = await deleteClient(selectedClient.id)
+
+      if (error) {
+        toast.error('Erro ao deletar cliente.')
+        return
+      }
+
+      setClients(prev => prev.filter(c => c.id !== selectedClient.id))
+      toast.success('Cliente deletado com sucesso!')
+    } catch (error) {
+      toast.error('Ocorreu um erro ao deletar o cliente.')
+    } finally {
+      setShowConfirm(false)
+      setSelectedClient(null)
+    }
+  }
 
   const filteredClients = useMemo(() => {
     const now = new Date()
@@ -80,6 +110,7 @@ export default function ClientsTable({
     })
 
     doc.save(`clientes_${new Date().toISOString().slice(0, 10)}.pdf`)
+    toast.success('PDF exportado com sucesso!')
   }
 
   function formatCPF(cpf: string): string {
@@ -101,6 +132,7 @@ export default function ClientsTable({
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes')
     XLSX.writeFile(workbook, `clientes_${new Date().toISOString().slice(0, 10)}.xlsx`)
+    toast.success('Excel exportado com sucesso!')
   }
 
   const exportToCSV = () => {
@@ -126,10 +158,25 @@ export default function ClientsTable({
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    toast.success('CSV exportado com sucesso!')
   }
 
   return (
     <div className="overflow-x-auto relative bg-white p-4 rounded-lg shadow border border-gray-200">
+      <Toaster position="bottom-right" />
+      <ConfirmationDialog
+        isOpen={showConfirm}
+        title="Confirmar exclusão"
+        message={
+          <>
+            Tem certeza que deseja excluir o cliente <span className="font-bold">{selectedClient?.Nome}</span>?
+          </>
+        }
+        confirmText="Excluir"
+        danger
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowConfirm(false)}
+      />
       {/* Filtros */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div className="flex gap-2 flex-wrap col-span-full">
@@ -182,7 +229,7 @@ export default function ClientsTable({
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded inline-flex items-center"
         >
-          <TbFileExport /> <GoTriangleDown className="ml-2" title='Exportar'/>
+          <TbFileExport /> <GoTriangleDown className="ml-2" title='Exportar' />
         </button>
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-10">
@@ -242,55 +289,91 @@ export default function ClientsTable({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nascimento</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPF</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Cadastro</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredClients.map(client => (
-              <tr key={client.id}>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{client.Nome}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{client.Email || '-'}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{client.Telefone || '-'}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{client.nascimento || '-'}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{client.cpf ? formatCPF(client.cpf) : '-'}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  {new Date(client.created_at).toLocaleDateString('pt-BR')}
-                </td>
-              </tr>
-            ))}
+            <AnimatePresence>
+              {filteredClients.map(client => (
+                <motion.tr
+                  key={client.id}
+                  initial={{ opacity: 1 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{client.Nome}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{client.Email || '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{client.Telefone || '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{client.nascimento || '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{client.cpf ? formatCPF(client.cpf) : '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {new Date(client.created_at).toLocaleDateString('pt-BR')}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <td className="px-6 py-4 text-sm">
+                      <button
+                        onClick={() => handleDeleteClick(client)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Deletar"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </td>
+                </motion.tr>
+              ))}
+            </AnimatePresence>
           </tbody>
         </table>
       </div>
 
       <div className="md:hidden space-y-4">
-        {filteredClients.map(client => (
-          <div key={client.id} className="bg-white p-4 rounded-lg shadow border border-gray-200">
-            <div className="space-y-2">
-              <div>
-                <h3 className="font-medium text-gray-900">{client.Nome}</h3>
-                <p className="text-sm text-gray-500">{client.Email || '-'}</p>
+        <AnimatePresence>
+          {filteredClients.map(client => (
+            <motion.div
+              key={client.id}
+              initial={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white p-4 rounded-lg shadow border border-gray-200"
+            >
+              <div className="space-y-2">
+                <div>
+                  <h3 className="font-medium text-gray-900">{client.Nome}</h3>
+                  <p className="text-sm text-gray-500">{client.Email || '-'}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-500">Telefone</p>
+                    <p>{client.Telefone || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-500">Nascimento</p>
+                    <p>{client.nascimento || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-500">CPF</p>
+                    <p>{client.cpf ? formatCPF(client.cpf) : '-'}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-500">Cadastro</p>
+                    <p>{new Date(client.created_at).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  <div className="flex justify-start mt-2">
+                    <button
+                      onClick={() => handleDeleteClick(client)}
+                      className="text-red-600 hover:text-red-800"
+                      title="Deletar"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <p className="font-medium text-gray-500">Telefone</p>
-                  <p>{client.Telefone || '-'}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-500">Nascimento</p>
-                  <p>{client.nascimento || '-'}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-500">CPF</p>
-                  <p>{client.cpf ? formatCPF(client.cpf) : '-'}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-500">Cadastro</p>
-                  <p>{new Date(client.created_at).toLocaleDateString('pt-BR')}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       {/* Paginação */}
