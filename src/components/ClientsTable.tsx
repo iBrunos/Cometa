@@ -33,7 +33,6 @@ export default function ClientsTable({
   const [selectedTime, setSelectedTime] = useState('Todos')
   const TIME_FILTERS = ['Todos', 'Últimos 7 dias', 'Últimos 30 dias']
 
-
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
   const filteredClients = useMemo(() => {
@@ -57,7 +56,6 @@ export default function ClientsTable({
       return nomeMatch && emailMatch && dddMatch && cpfMatch && timeMatch
     })
   }, [clients, searchNome, searchEmail, searchDDD, searchCPF, selectedTime])
-
 
   const exportToPDF = () => {
     const doc = new jsPDF()
@@ -83,6 +81,7 @@ export default function ClientsTable({
 
     doc.save(`clientes_${new Date().toISOString().slice(0, 10)}.pdf`)
   }
+
   function formatCPF(cpf: string): string {
     const cleaned = cpf.replace(/\D/g, '')
     return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
@@ -139,8 +138,8 @@ export default function ClientsTable({
               key={filter}
               onClick={() => setSelectedTime(filter)}
               className={`text-gray-800 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-2xl text-sm px-4 py-2 flex items-center gap-1
-        ${selectedTime === filter ? 'ring-2 ring-blue-300 bg-gray-200' : ''}
-      `}
+                ${selectedTime === filter ? 'ring-2 ring-blue-300 bg-gray-200' : ''}
+              `}
             >
               {filter}
             </button>
@@ -232,32 +231,68 @@ export default function ClientsTable({
         </div>
       )}
 
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">E-mail</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nascimento</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPF</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Cadastro</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {filteredClients.map(client => (
-            <tr key={client.id}>
-              <td className="px-6 py-4 text-sm font-medium text-gray-900">{client.Nome}</td>
-              <td className="px-6 py-4 text-sm text-gray-500">{client.Email || '-'}</td>
-              <td className="px-6 py-4 text-sm text-gray-500">{client.Telefone || '-'}</td>
-              <td className="px-6 py-4 text-sm text-gray-500">{client.nascimento || '-'}</td>
-              <td className="px-6 py-4 text-sm text-gray-500">{client.cpf ? formatCPF(client.cpf) : '-'}</td>
-              <td className="px-6 py-4 text-sm text-gray-500">
-                {new Date(client.created_at).toLocaleDateString('pt-BR')}
-              </td>
+      {/* Tabela para telas maiores (md para cima) */}
+      <div className="hidden md:block">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">E-mail</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefone</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nascimento</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPF</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data Cadastro</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredClients.map(client => (
+              <tr key={client.id}>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">{client.Nome}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{client.Email || '-'}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{client.Telefone || '-'}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{client.nascimento || '-'}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{client.cpf ? formatCPF(client.cpf) : '-'}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  {new Date(client.created_at).toLocaleDateString('pt-BR')}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Cards para telas pequenas (md para baixo) */}
+      <div className="md:hidden space-y-4">
+        {filteredClients.map(client => (
+          <div key={client.id} className="bg-white p-4 rounded-lg shadow border border-gray-200">
+            <div className="space-y-2">
+              <div>
+                <h3 className="font-medium text-gray-900">{client.Nome}</h3>
+                <p className="text-sm text-gray-500">{client.Email || '-'}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="font-medium text-gray-500">Telefone</p>
+                  <p>{client.Telefone || '-'}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-500">Nascimento</p>
+                  <p>{client.nascimento || '-'}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-500">CPF</p>
+                  <p>{client.cpf ? formatCPF(client.cpf) : '-'}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-500">Cadastro</p>
+                  <p>{new Date(client.created_at).toLocaleDateString('pt-BR')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* Paginação */}
       {totalPages > 1 && (
