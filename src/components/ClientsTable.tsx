@@ -261,7 +261,6 @@ export default function ClientsTable({
         </table>
       </div>
 
-      {/* Cards para telas pequenas (md para baixo) */}
       <div className="md:hidden space-y-4">
         {filteredClients.map(client => (
           <div key={client.id} className="bg-white p-4 rounded-lg shadow border border-gray-200">
