@@ -4,10 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { login } from '@/lib/supabase'
 import Image from 'next/image'
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -26,14 +29,15 @@ export default function LoginPage() {
     }
 
     if (user) {
+      // (Opcional) Lógica para "Lembrar-me" pode ser implementada aqui
       router.push('/dashboard')
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="flex bg-white rounded-lg shadow-lg overflow-hidden w-full max-w-4xl">
-        {/* Imagem lateral (visível apenas em telas grandes) */}
+        {/* Lado com imagem (desktop) */}
         <div className="hidden lg:block lg:w-1/2 bg-gray-100 relative">
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <Image
@@ -47,7 +51,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Formulário de login */}
+        {/* Formulário */}
         <div className="w-full p-8 lg:w-1/2">
           <div className="flex justify-center mb-8 lg:hidden">
             <Image
@@ -59,7 +63,7 @@ export default function LoginPage() {
               priority
             />
           </div>
-          
+
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Acesse sua conta</h2>
           <p className="text-center text-gray-600 mb-8">Insira suas credenciais para continuar</p>
 
@@ -88,22 +92,43 @@ export default function LoginPage() {
               />
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Senha
-                </label>
-              </div>
+            <div className="relative">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Senha
+              </label>
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-9 right-3 text-gray-600 focus:outline-none"
+                aria-label="Mostrar ou ocultar senha"
+              >
+                {showPassword ? <AiFillEyeInvisible size={20} /> : <AiFillEye size={20} />}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                  className="mr-2"
+                />
+                Lembrar-me
+              </label>
+              <a href="#" className="text-sm text-blue-600 hover:underline">
+                Esqueceu a senha?
+              </a>
             </div>
 
             <div>
@@ -124,14 +149,6 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>  
-            </div>
-          </div>
         </div>
       </div>
     </div>
