@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false)
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -29,7 +30,6 @@ export default function LoginPage() {
     }
 
     if (user) {
-      // (Opcional) Lógica para "Lembrar-me" pode ser implementada aqui
       router.push('/dashboard')
     }
   }
@@ -126,9 +126,13 @@ export default function LoginPage() {
                 />
                 Lembrar-me
               </label>
-              <a href="#" className="text-sm text-blue-600 hover:underline">
+              <button
+                type="button"
+                onClick={() => setShowForgotPasswordModal(true)}
+                className="text-sm text-blue-600 hover:underline"
+              >
                 Esqueceu a senha?
-              </a>
+              </button>
             </div>
 
             <div>
@@ -151,6 +155,23 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
+
+      {/* Modal de "Esqueceu a senha?" */}
+      {showForgotPasswordModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
+            <p className="text-gray-800 mb-4 text-sm">
+              Para redefinir sua senha, entre em contato com o administrador.
+            </p>
+            <button
+              onClick={() => setShowForgotPasswordModal(false)}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
