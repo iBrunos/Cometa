@@ -14,7 +14,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ConfirmationDialog } from './ConfirmationDialog'
 
 interface ClientsTableProps {
-  clients: Client[]
+  allClients: Client[] // Todos os clientes
+  clients: Client[]    // Clientes da página atual
   loading?: boolean
   currentPage?: number
   totalPages?: number
@@ -22,6 +23,7 @@ interface ClientsTableProps {
 }
 
 export default function ClientsTable({
+  allClients,
   clients: initialClients,
   loading = false,
   currentPage = 1,
@@ -87,12 +89,28 @@ export default function ClientsTable({
     })
   }, [clients, searchNome, searchEmail, searchDDD, searchCPF, selectedTime])
 
+  const getClientsToExport = () => {
+    if (selectedTime === 'Todos') {
+      return allClients.filter(client => {
+        const nomeMatch = client.Nome?.toLowerCase().includes(searchNome.toLowerCase())
+        const emailMatch = client.Email?.toLowerCase().includes(searchEmail.toLowerCase())
+        const ddd = client.Telefone?.match(/\((\d{2,3})\)/)?.[1] || ''
+        const dddMatch = ddd.includes(searchDDD)
+        const cpfMatch = client.cpf?.replace(/\D/g, '').includes(searchCPF.replace(/\D/g, ''))
+
+        return nomeMatch && emailMatch && dddMatch && cpfMatch
+      })
+    }
+    return filteredClients
+  }
+
   const exportToPDF = () => {
+    const clientsToExport = getClientsToExport()
     const doc = new jsPDF()
     doc.text('Relatório de Clientes', 14, 16)
 
     const headers = [['Nome', 'E-mail', 'Telefone', 'Nascimento', 'CPF', 'Data Cadastro']]
-    const data = filteredClients.map(client => [
+    const data = clientsToExport.map(client => [
       client.Nome,
       client.Email || '-',
       client.Telefone || '-',
@@ -119,8 +137,9 @@ export default function ClientsTable({
   }
 
   const exportToExcel = () => {
+    const clientsToExport = getClientsToExport()
     const worksheet = XLSX.utils.json_to_sheet(
-      filteredClients.map(client => ({
+      clientsToExport.map(client => ({
         Nome: client.Nome,
         Email: client.Email || '-',
         Telefone: client.Telefone || '-',
@@ -136,9 +155,10 @@ export default function ClientsTable({
   }
 
   const exportToCSV = () => {
+    const clientsToExport = getClientsToExport()
     const csvContent = [
-      ['Nome', 'E-mail', 'Telefone', 'Data Cadastro'],
-      ...filteredClients.map(client => [
+      ['Nome', 'E-mail', 'Telefone', 'Nascimento', 'CPF', 'Data Cadastro'],
+      ...clientsToExport.map(client => [
         client.Nome,
         client.Email || '-',
         client.Telefone || '-',
@@ -310,15 +330,13 @@ export default function ClientsTable({
                     {new Date(client.created_at).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    <td className="px-6 py-4 text-sm">
-                      <button
-                        onClick={() => handleDeleteClick(client)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Deletar"
-                      >
-                        <FaTrash />
-                      </button>
-                    </td>
+                    <button
+                      onClick={() => handleDeleteClick(client)}
+                      className="text-red-600 hover:text-red-800"
+                      title="Deletar"
+                    >
+                      <FaTrash />
+                    </button>
                   </td>
                 </motion.tr>
               ))}

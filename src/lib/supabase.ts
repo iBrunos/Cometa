@@ -69,3 +69,16 @@ export const addClient = async (clientData: Omit<Client, 'id' | 'created_at'>) =
 
   return { data: data?.[0], error }
 }
+export async function fetchAllClients() {
+  const { data, error } = await supabase
+    .from('Clientes')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching all clients:', error)
+    return { data: null, error }
+  }
+
+  return { data, error: null }
+}

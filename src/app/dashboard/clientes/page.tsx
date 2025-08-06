@@ -3,20 +3,22 @@
 import { useState, useEffect } from 'react'
 import ClientsTable from '@/components/ClientsTable'
 import { useRouter } from 'next/navigation'
-import { fetchClients, Client, logout } from '@/lib/supabase'
+import { fetchClients, Client, logout, fetchAllClients } from '@/lib/supabase'
 import { FaArrowLeft, FaArrowRight, FaPlus } from 'react-icons/fa'
 import { IoMdExit } from 'react-icons/io'
 import CreateClientModal from '@/components/CreateClientModal'
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
+  const [allClients, setAllClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const router = useRouter()
 
-  const loadClients = async () => {
+  // Carrega os clientes da página atual
+  const loadPaginatedClients = async () => {
     setLoading(true)
     try {
       const { data, error, totalPages } = await fetchClients(currentPage)
@@ -33,8 +35,19 @@ export default function ClientsPage() {
     }
   }
 
+  // Carrega TODOS os clientes para exportação
+  const loadAllClients = async () => {
+    try {
+      const { data } = await fetchAllClients()
+      setAllClients(data || [])
+    } catch (error) {
+      console.error('Erro ao carregar todos os clientes:', error)
+    }
+  }
+
   useEffect(() => {
-    loadClients()
+    loadPaginatedClients()
+    loadAllClients() // Carrega todos os clientes apenas uma vez
   }, [currentPage])
 
   const handleLogout = async () => {
@@ -43,7 +56,9 @@ export default function ClientsPage() {
   }
 
   const handleClientCreated = () => {
-    loadClients() // Recarrega a lista de clientes
+    // Recarrega ambos os conjuntos de dados
+    loadPaginatedClients()
+    loadAllClients()
     setIsCreateModalOpen(false)
   }
 
@@ -54,7 +69,6 @@ export default function ClientsPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Lista de Clientes</h2>
             <div className="flex items-center gap-4">
-
               <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
@@ -84,7 +98,9 @@ export default function ClientsPage() {
           ) : (
             <>
               <ClientsTable
+                allClients={allClients}
                 clients={clients}
+                loading={loading}
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
