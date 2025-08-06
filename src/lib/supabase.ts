@@ -60,3 +60,12 @@ export const deleteClient = async (id: string) => {
   const { error } = await supabase.from('Clientes').delete().eq('id', id)
   return { error }
 }
+
+export const addClient = async (clientData: Omit<Client, 'id' | 'created_at'>) => {
+  const { data, error } = await supabase
+    .from('Clientes')
+    .insert([clientData])
+    .select()
+
+  return { data: data?.[0], error }
+}

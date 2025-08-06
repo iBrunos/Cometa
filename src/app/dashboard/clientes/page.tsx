@@ -2,35 +2,50 @@
 
 import { useState, useEffect } from 'react'
 import ClientsTable from '@/components/ClientsTable'
-import { fetchClients, Client } from '@/lib/supabase'
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa'
+import { useRouter } from 'next/navigation'
+import { fetchClients, Client, logout } from '@/lib/supabase'
+import { FaArrowLeft, FaArrowRight, FaPlus } from 'react-icons/fa'
+import { IoMdExit } from 'react-icons/io'
+import CreateClientModal from '@/components/CreateClientModal'
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const router = useRouter()
+
+  const loadClients = async () => {
+    setLoading(true)
+    try {
+      const { data, error, totalPages } = await fetchClients(currentPage)
+      if (error) {
+        console.error('Erro ao buscar clientes:', error)
+      } else {
+        setClients(data || [])
+        setTotalPages(totalPages)
+      }
+    } catch (error) {
+      console.error('Erro inesperado:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      try {
-        const { data, error, totalPages } = await fetchClients(currentPage)
-        if (error) {
-          console.error('Erro ao buscar clientes:', error)
-        } else {
-          setClients(data || [])
-          setTotalPages(totalPages)
-        }
-      } catch (error) {
-        console.error('Erro inesperado:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadData()
+    loadClients()
   }, [currentPage])
+
+  const handleLogout = async () => {
+    await logout()
+    router.push('/login')
+  }
+
+  const handleClientCreated = () => {
+    loadClients() // Recarrega a lista de clientes
+    setIsCreateModalOpen(false)
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -38,10 +53,29 @@ export default function ClientsPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800">Lista de Clientes</h2>
-            <div className="text-sm text-gray-500">
-              {clients.length} {clients.length === 1 ? 'cliente' : 'clientes'} encontrados
+            <div className="flex items-center gap-4">
+
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
+              >
+                <FaPlus /> Novo Cliente
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                title="Sair"
+              >
+                <IoMdExit className="text-xl" />
+              </button>
             </div>
           </div>
+
+          <CreateClientModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onClientCreated={handleClientCreated}
+          />
 
           {loading ? (
             <div className="flex justify-center items-center h-64">
@@ -55,29 +89,6 @@ export default function ClientsPage() {
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
               />
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-                >
-                  <FaArrowLeft />
-                  Anterior
-                </button>
-
-                <span className="text-sm text-gray-600">
-                  Página {currentPage} de {totalPages}
-                </span>
-
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-                >
-                  Próxima
-                  <FaArrowRight />
-                </button>
-              </div>
             </>
           )}
         </div>
