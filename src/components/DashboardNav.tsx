@@ -53,23 +53,23 @@ export default function DashboardNav() {
         {/* Logo/Header */}
         <header className="flex items-center justify-between h-16 px-4 border-b border-red-600">
           {isOpen ? (
-            <Link href="/Logo-Cometa-Contraste.png" className="flex items-center space-x-2">
+            <Link href="/logo.png" className="flex items-center space-x-2">
               <div className="relative w-8 h-8">
                 <Image
-                  src="/Logo-Cometa-Contraste.png"
-                  alt="Cometa WiFi Logo"
+                  src="/logo.png"
+                  alt="Planeta WiFi Logo"
                   fill
                   className="object-contain"
                 />
               </div>
-              <h1 className="text-xl font-bold whitespace-nowrap">Lojas Cometa</h1>
+              <h1 className="text-xl font-bold whitespace-nowrap">Lojas Planeta</h1>
             </Link>
           ) : (
             <Link href="/" className="mx-auto">
               <div className="relative w-8 h-8">
                 <Image
-                  src="/Logo-Cometa-Contraste.png"
-                  alt="Cometa Icon"
+                  src="/logo.png"
+                  alt="Planeta Icon"
                   fill
                   className="object-contain"
                 />

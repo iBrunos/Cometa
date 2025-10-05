@@ -41,8 +41,8 @@ export default function LoginPage() {
         <div className="hidden lg:block lg:w-1/2 bg-gray-100 relative">
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <Image
-              src="/Logo-Cometa-Contraste.png"
-              alt="Logo Cometa"
+              src="/logo.png"
+              alt="Logo Planeta"
               width={300}
               height={150}
               className="object-contain"
@@ -55,8 +55,8 @@ export default function LoginPage() {
         <div className="w-full p-8 lg:w-1/2">
           <div className="flex justify-center mb-8 lg:hidden">
             <Image
-              src="/Logo-Cometa-Contraste.png"
-              alt="Logo Cometa"
+              src="/logo.png"
+              alt="Logo Planeta"
               width={200}
               height={100}
               className="object-contain"
